@@ -3,7 +3,7 @@
 
 #include <glad/glad.h>
 #include <glm/glm.hpp>
-#include "shader.h"
+#include "Shader.h"
 
 class DirectionalLight {
 public:

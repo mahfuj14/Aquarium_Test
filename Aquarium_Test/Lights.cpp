@@ -21,9 +21,12 @@ DirLight::~DirLight()
 void DirLight::apply(Shader* sp)
 {
 	sp->setVec3("dirLight.direction", direction);
-	sp->setVec3("dirLight.ambient", ambient);
-	sp->setVec3("dirLight.diffuse", diffuse);
-	sp->setVec3("dirLight.specular", specular);
+	sp->setVec3("dirLight.ambient", ambient * ambientOn* isOn);
+	sp->setVec3("dirLight.diffuse", diffuse * diffuseOn * isOn);
+	sp->setVec3("dirLight.specular", specular * specularOn* isOn);
+
+
+
 }
 
 //
@@ -55,9 +58,9 @@ void SpotLight::apply(Shader* sp)
 {
 	sp->setVec3("spotLight.position", position);
 	sp->setVec3("spotLight.direction", direction);
-	sp->setVec3("spotLight.ambient", ambient);
-	sp->setVec3("spotLight.diffuse", diffuse);
-	sp->setVec3("spotLight.specular", specular);
+	sp->setVec3("spotLight.ambient", ambient * ambientOn* isOn);
+	sp->setVec3("spotLight.diffuse", diffuse * diffuseOn* isOn);
+	sp->setVec3("spotLight.specular", specular * specularOn * isOn);
 
 	sp->setFloat("spotLight.cutOff", cutOff);
 	sp->setFloat("spotLight.outerCutOff", outerCutOff);

@@ -26,7 +26,7 @@ enum Camera_Movement {
 // An abstract camera class that processes input and calculates the corresponding Euler Angles, Vectors and Matrices for use in OpenGL
 class Camera
 {
-private:
+public:
 	glm::vec3 Position;
 	glm::vec3 Front;
 	glm::vec3 Up;
@@ -43,7 +43,6 @@ private:
 	// Calculates the front vector from the Camera's (updated) Euler Angles
 	void updateCameraVectors();
 
-public:
 	// Camera Attributes
 	bool EnableCamera; //Enables Camera, used with button on mouse
 	float Zoom;

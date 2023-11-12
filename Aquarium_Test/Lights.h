@@ -16,10 +16,53 @@ public:
 	glm::vec3 diffuse;
 	glm::vec3 specular;
 
-public:
 	DirLight();
 	~DirLight();
 	void apply(Shader* sp);
+
+    void turnOff()
+    {
+        isOn = 0.0;
+    }
+    void turnOn()
+    {
+        isOn = 1.0;
+    }
+    void turnAmbientOn()
+    {
+        ambientOn = 1.0;
+    }
+    void turnAmbientOff()
+    {
+        ambientOn = 0.0;
+    }
+    void turnDiffuseOn()
+    {
+        diffuseOn = 1.0;
+    }
+    void turnDiffuseOff()
+    {
+        diffuseOn = 0.0;
+    }
+    void turnSpecularOn()
+    {
+        specularOn = 1.0;
+    }
+    void turnSpecularOff()
+    {
+        specularOn = 0.0;
+    }
+
+private:
+    float ambientOn = 1.0;
+    float diffuseOn = 1.0;
+    float specularOn = 1.0;
+    float isOn = 1.0;
+
+
+
+
+
 };
 
 class SpotLight
@@ -43,6 +86,49 @@ public:
 	SpotLight();
 	~SpotLight();
 	void apply(Shader* sp);
+
+    void turnOff()
+    {
+        isOn = 0.0;
+    }
+    void turnOn()
+    {
+        isOn = 1.0;
+    }
+    void turnAmbientOn()
+    {
+        ambientOn = 1.0;
+    }
+    void turnAmbientOff()
+    {
+        ambientOn = 0.0;
+    }
+    void turnDiffuseOn()
+    {
+        diffuseOn = 1.0;
+    }
+    void turnDiffuseOff()
+    {
+        diffuseOn = 0.0;
+    }
+    void turnSpecularOn()
+    {
+        specularOn = 1.0;
+    }
+    void turnSpecularOff()
+    {
+        specularOn = 0.0;
+    }
+
+private:
+    float ambientOn = 1.0;
+    float diffuseOn = 1.0;
+    float specularOn = 1.0;
+    float isOn = 1.0;
+
+
+
+
 };
 
 
