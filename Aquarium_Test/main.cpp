@@ -187,8 +187,8 @@ int main()
 	//Other* treasure = new Other("treasure", glm::vec3(1.0f, 1.0f, 1.0f));
 	//table.push_back(treasure);
 
-	DWORD next_game_tick = GetTickCount();
-	int sleep_time = 0;
+	//DWORD next_game_tick = GetTickCount();
+	//int sleep_time = 0;
 
 	while (!glfwWindowShouldClose(window))
 	{
