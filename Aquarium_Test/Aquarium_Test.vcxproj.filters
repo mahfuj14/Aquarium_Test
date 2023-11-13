@@ -79,23 +79,23 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="normal.vs">
-      <Filter>Source Files</Filter>
-    </None>
-    <None Include="normal.fs">
-      <Filter>Source Files</Filter>
-    </None>
-    <None Include="PhongShading.fs">
-      <Filter>Source Files</Filter>
-    </None>
-    <None Include="PhongShading.vs">
-      <Filter>Source Files</Filter>
+    <None Include="lightShading.fs">
+      <Filter>Resource Files</Filter>
     </None>
     <None Include="lightShading.vs">
-      <Filter>Source Files</Filter>
+      <Filter>Resource Files</Filter>
     </None>
-    <None Include="lightShading.fs">
-      <Filter>Source Files</Filter>
+    <None Include="PhongShading.fs">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="PhongShading.vs">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="normal.fs">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="normal.vs">
+      <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>
 </Project>
