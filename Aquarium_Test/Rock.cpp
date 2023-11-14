@@ -7,7 +7,7 @@ Rock::Rock()
 
 	float Y = random(0.1f, 0.4f);
 
-	x = random(-10.0f, 10.0f); y = Y / 3; z = random(-10.0f, 10.0f);
+	x = random(-4.0f, 4.0f); y = Y / 3; z = random(-4.0f, 4.0f);
 	sx = random(0.1f, 0.5f);  sy = Y; sz = random(0.1f, 0.5f);
 
 	std::vector< glm::vec3 > vertices;

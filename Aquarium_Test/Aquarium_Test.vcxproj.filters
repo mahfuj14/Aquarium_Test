@@ -27,9 +27,6 @@
     <ClCompile Include="Renderable.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Plant.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Rock.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -43,6 +40,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Shader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Skybox.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -77,14 +77,11 @@
     <ClInclude Include="SpotLight.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Skybox.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="lightShading.fs">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="lightShading.vs">
-      <Filter>Resource Files</Filter>
-    </None>
     <None Include="PhongShading.fs">
       <Filter>Resource Files</Filter>
     </None>
@@ -95,6 +92,21 @@
       <Filter>Resource Files</Filter>
     </None>
     <None Include="normal.vs">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="cubemaps.vs">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="cubemaps.fs">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="skybox.fs">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="skybox.vs">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="PhongShading2.fs">
       <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>

@@ -69,7 +69,27 @@ void SpotLight::apply(Shader* sp)
 	sp->setFloat("spotLight.quadratic", quadratic);
 }
 
-
+PointLight::PointLight() {
+	position = glm::vec3(0.0f, 10.0f, 0.0f);
+	ambient = glm::vec3(0.05f, 0.05f, 0.05f);
+	diffuse = glm::vec3(0.9f, 0.9f, 0.9f);
+	specular = glm::vec3(1.0f, 1.0f, 1.0f);
+	constant = 1.0f;
+	linear = 0.09f;
+	quadratic = 0.032f;
+}
+void PointLight::apply(Shader* sp) {
+	sp->setVec3("pointLight.ambient", ambient * ambientOn * isOn);
+	sp->setVec3("pointLight.diffuse", diffuse * diffuseOn * isOn);
+	sp->setVec3("pointLight.specular", specular * specularOn * isOn);
+	sp->setVec3("pointLight.position", position);
+	sp->setFloat("pointLight.constant", constant);
+	sp->setFloat("pointLight.linear", linear);
+	sp->setFloat("pointLight.quadratic", quadratic);
+}
+PointLight::~PointLight() {
+	//
+}
 
 
 

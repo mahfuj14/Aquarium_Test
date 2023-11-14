@@ -138,10 +138,10 @@
     <ClCompile Include="Lights.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="other.cpp" />
-    <ClCompile Include="Plant.cpp" />
     <ClCompile Include="Renderable.cpp" />
     <ClCompile Include="Rock.cpp" />
     <ClCompile Include="Shader.cpp" />
+    <ClCompile Include="Skybox.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h" />
@@ -152,16 +152,20 @@
     <ClInclude Include="Renderable.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="Shader.h" />
+    <ClInclude Include="Skybox.h" />
     <ClInclude Include="SpotLight.h" />
     <ClInclude Include="stb_image.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="lightShading.fs" />
-    <None Include="lightShading.vs" />
+    <None Include="cubemaps.fs" />
+    <None Include="cubemaps.vs" />
     <None Include="PhongShading.fs" />
     <None Include="PhongShading.vs" />
     <None Include="normal.fs" />
     <None Include="normal.vs" />
+    <None Include="PhongShading2.fs" />
+    <None Include="skybox.fs" />
+    <None Include="skybox.vs" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

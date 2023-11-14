@@ -113,6 +113,49 @@ void Fish::draw(Shader* sp)
 	glDrawArrays(GL_TRIANGLES, 0, VerticesNumber);
 }
 
-void Fish::behave() {}
-void Fish::move(glm::vec3 coordinates) {}
-glm::vec2 Fish::AnglesBeetwen(glm::vec3 v1, glm::vec3 v2) { return glm::vec2(0,0); }
+void Fish::behave()
+{
+	if (steps == 0)
+	{
+		wantToGo = glm::vec3(random(-MAX_X, MAX_X), random(MIN_Y, MAX_Y), random(-MAX_Z, MAX_Z));
+		Velocity = random(0.01f, 0.05f);
+		glm::vec3 directionToGo = wantToGo - glm::vec3(x, y, z);
+		steps = round(distance(wantToGo, glm::vec3(x, y, z)) / Velocity);
+
+		rx = glm::degrees(AnglesBeetwen(glm::vec3(x, y, z), wantToGo).x);
+		ry = glm::degrees(AnglesBeetwen(glm::vec3(x, y, z), wantToGo).y);
+	}
+	else
+	{
+		move(wantToGo);
+		steps--;
+	}
+
+}
+
+void Fish::move(glm::vec3 coordinates)
+{
+	float dist = distance(coordinates, glm::vec3(x, y, z));
+	x += (coordinates.x - x) / dist * Velocity;
+	y += (coordinates.y - y) / dist * Velocity;
+	z += (coordinates.z - z) / dist * Velocity;
+
+}
+
+glm::vec2 Fish::AnglesBeetwen(glm::vec3 v1, glm::vec3 v2)
+{
+	float distXZ = glm::distance(glm::vec2(v1.x, v1.z), glm::vec2(v2.x, v2.z));
+	float dist = glm::distance(v1, v2);
+	float rx = glm::acos(distXZ / dist);
+	///float ry = glm::acos(distYZ / dist);
+
+
+	if (v2.y < v1.y)
+		rx = -rx;
+	float ry = glm::acos((v2.z - v1.z) / glm::distance(glm::vec2(v1.x, v1.z), glm::vec2(v2.x, v2.z)));
+
+	if (v2.x < v1.x)
+		ry = -ry;
+
+	return glm::vec2(rx, ry);
+}

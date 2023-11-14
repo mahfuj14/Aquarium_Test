@@ -1,5 +1,6 @@
 #define STB_IMAGE_IMPLEMENTATION
 #define _CRT_SECURE_NO_WARNINGS
+#define _CRT_SECURE_NO_DEPRECATE
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
@@ -15,11 +16,12 @@
 #include "Floor.h"
 #include "Renderable.h"
 #include "stb_image.h"
+#include "Skybox.h"
 #include <Windows.h>
 
 // settings
-const unsigned int SCR_WIDTH = 1300;
-const unsigned int SCR_HEIGHT = 980;
+const unsigned int SCR_WIDTH = 1540;
+const unsigned int SCR_HEIGHT = 1060;
 const int FRAMES_PER_SECOND = 120;
 const int SKIP_TICKS = 1000 / FRAMES_PER_SECOND;
 glm::vec3 CLEAR_COLOR = glm::vec3(0.2f, 0.3f, 0.3f);
@@ -28,15 +30,23 @@ void framebufferSizeCallback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window);
 void scrollCallback(GLFWwindow* window, double xOffset, double yOffset);
 void mouseCallback(GLFWwindow* window, double xPos, double yPos);
-void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods);
+//void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods);
 
-Camera camera(glm::vec3(0.0f, 0.1f, 3.0f));
-Shader* lightPosShader, * dShader;
+
+unsigned int drawControlPoints();
+long long nCr(int n, int r);
+void BezierCurve(double t, float xy[2], GLfloat ctrlpoints[], int L);
+unsigned int hollowBezier(GLfloat ctrlpoints[], int L);
+
+Camera camera(glm::vec3(0.0f, 3.0f, 8.0f));
+Shader* lightPosShader, * dShader, * shaderCube, *shaderSkybox;
 Floor* podloga_w;
 Renderable* object;
 std::vector<Renderable*> table;
 DirLight* lightDir;
 SpotLight* lightSpot;
+PointLight* lightPoint;
+Skybox* sky;
 
 bool lightingOn = false;
 float ambientOn = 1.0;
@@ -45,7 +55,7 @@ float specularOn = 1.0;
 bool dark = false;
 
 float directionalLightOn = 0.0;
-float pointLightOn = 1.0;
+float pointLightOn = 0.0;
 float spotLightOn = 0.0;
 
 
@@ -56,7 +66,7 @@ int rockNum = 5;
 int objNum = fishNum + rockNum;
 
 
-bool enableF = 1, enableD = 1, enableS = 1;
+bool enableF = 1, enableD = 1, enableS = 1, enableP=1;
 float KEY_PRESS = 0.0;
 
 float lastX = SCR_WIDTH / 2.0f;
@@ -66,6 +76,85 @@ bool firstMouse = true;
 float deltaTime = 0.0f;	// time between current frame and last frame
 float lastFrame = 0.0f;
 
+class Vector2D {
+public:
+	double X, Y;
+
+
+	Vector2D(double, double);
+};
+Vector2D::Vector2D(double xx, double  yy) {
+	X = xx;
+	Y = yy;
+}
+
+//static void PythagorasTree(Vector2D* center, Vector2D* up, const unsigned long depth);
+//static void DrawRectangle(Vector2D* center, Vector2D* up, const unsigned long depth);
+//static void PythagorasTreeByLen(Vector2D* center, Vector2D* up, const unsigned long depth, const double magn, const unsigned long screenw, const unsigned long screenh);
+
+std::vector <float> cntrlPoints = {
+-0.2200, 0.5650, 5.1000,
+-0.2150, 0.7300, 5.1000,
+-0.2350, 0.9200, 5.1000,
+-0.2350, 0.9650, 5.1000,
+-0.2300, 1.0500, 5.1000,
+-0.2100, 1.1300, 5.1000,
+-0.2250, 1.2050, 5.1000,
+-0.2400, 1.2800, 5.1000,
+-0.2400, 1.3900, 5.1000,
+-0.2400, 1.4700, 5.1000,
+-0.2400, 1.6000, 5.1000,
+-0.2600, 1.6600, 5.1000,
+-0.3200, 1.6800, 5.1000,
+-0.3900, 1.7050, 5.1000,
+-0.5050, 1.7400, 5.1000,
+-0.5650, 1.7600, 5.1000,
+-0.6400, 1.7850, 5.1000,
+-0.7400, 1.8250, 5.1000,
+-0.8700, 1.8950, 5.1000,
+-0.9000, 1.9800, 5.1000,
+-0.8750, 2.0750, 5.1000,
+-0.8550, 2.1250, 5.1000,
+-0.7950, 2.1950, 5.1000,
+-0.7250, 2.2500, 5.1000,
+-0.6500, 2.2800, 5.1000,
+-0.5600, 2.3000, 5.1000,
+-0.4600, 2.3350, 5.1000,
+-0.4100, 2.3600, 5.1000,
+-0.3000, 2.3800, 5.1000,
+-0.2500, 2.3950, 5.1000,
+-0.2000, 2.3950, 5.1000,
+-0.1600, 2.4000, 5.1000,
+-0.0900, 2.4150, 5.1000,
+-0.0350, 2.4150, 5.1000,
+0.0050, 2.4150, 5.1000,
+0.0600, 2.4250, 5.1000,
+};
+std::vector <float> coordinates;
+std::vector <float> normals;
+std::vector <int> indices;
+std::vector <float> vertices;
+class point
+{
+public:
+	point()
+	{
+		x = 0;
+		y = 0;
+	}
+	int x;
+	int y;
+} clkpt[2];
+int mouseButtonFlag = 0;
+FILE* fp;
+const double pi = 3.14159265389;
+const int nt = 40;
+const int ntheta = 20;
+bool showControlPoints = true;
+bool loadBezierCurvePoints = true;
+bool showHollowBezier = true;
+bool lineMode = false;
+unsigned int bezierVAO;
 
 
 void initOpenGLProgram(GLFWwindow* window)
@@ -75,8 +164,8 @@ void initOpenGLProgram(GLFWwindow* window)
 	glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
 	glfwSetCursorPosCallback(window, mouseCallback);
 	glfwSetScrollCallback(window, scrollCallback);
-	glfwSetMouseButtonCallback(window, mouseButtonCallback);
-	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL); // tell GLFW to capture our mouse
+	//glfwSetMouseButtonCallback(window, mouseButtonCallback);
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED); // tell GLFW to capture our mouse
 }
 
 void freeOpenGLProgram(GLFWwindow* window)
@@ -95,12 +184,15 @@ void drawScene(GLFWwindow* window)
 	glClearColor(0.4f, 0.5f, 0.3f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+
 	dShader->use();
 	dShader->setVec3("viewPos", camera.getPosition());
 	dShader->setFloat("material.shininess", 32.0f);
 
 	lightDir->apply(dShader);
 	lightSpot->apply(dShader);
+	lightPoint->apply(dShader);
+
 
 	glm::mat4 model = glm::mat4(1.0f);
 	glm::mat4 view = glm::mat4(1.0f);
@@ -116,8 +208,61 @@ void drawScene(GLFWwindow* window)
 	dShader->setBool("enableFog", enableF);
 	dShader->setBool("enableDirLight", enableD);
 	dShader->setBool("enableSpotLight", enableS);
+	dShader->setBool("enablePointLight", enableP);
 
 	podloga_w->draw(dShader);
+	shaderCube->use();
+	shaderCube->setMat4("view", view);
+	//shaderCube->setMat4("model", model);
+	shaderCube->setMat4("projection", projection);
+	shaderCube->setVec3("viewPos", camera.getPosition());
+	shaderCube->setVec3("FogColor", CLEAR_COLOR);
+	shaderCube->setFloat("material.shininess", 32.0f);
+
+	//shaderCube->setBool("enableFog", enableF);
+	shaderCube->setBool("enableDirLight", enableD);
+	shaderCube->setBool("enableSpotLight", enableS);
+	shaderCube->setBool("enablePointLight", enableP);
+
+	shaderSkybox->setMat4("view", view);
+	shaderSkybox->setMat4("projection", projection);
+
+	
+	if (loadBezierCurvePoints)
+	{
+		bezierVAO = hollowBezier(cntrlPoints.data(), ((unsigned int)cntrlPoints.size() / 3) - 1);
+		loadBezierCurvePoints = false;
+		showHollowBezier = true;
+	}
+	if (showHollowBezier)
+	{
+		lightPosShader->use();
+
+		glBindVertexArray(bezierVAO);
+		glDrawElements(GL_TRIANGLES,                    // primitive type
+			(unsigned int)indices.size(),          // # of indices
+			GL_UNSIGNED_INT,                 // data type
+			(void*)0);                       // offset to indices
+
+		// unbind VAO
+		glBindVertexArray(0);
+	}
+	if (showControlPoints)
+	{
+		lightPosShader->use();
+		lightPosShader->setMat4("projection", projection);
+		lightPosShader->setMat4("view", view);
+		model = glm::mat4(1.0f);
+		lightPosShader->setMat4("model", model);
+		lightPosShader->setVec3("color", glm::vec3(0.0f, 0.4f, 0.2f));
+		//unsigned int controlPointVAO = drawControlPoints();
+		//glBindVertexArray(controlPointVAO);
+		glPointSize(5.0);
+		glDrawArrays(GL_POINTS, 0, (unsigned int)cntrlPoints.size());
+	}
+
+
+
 
 	for (int i = 0; i < objNum; i++)
 	{
@@ -125,6 +270,7 @@ void drawScene(GLFWwindow* window)
 		object->behave();
 		object->draw(dShader);
 	}
+	sky->draw(shaderCube, shaderSkybox);
 	//creating a treasure 
 	//object = table[objNum];
 	//object->draw(dShader);
@@ -165,11 +311,17 @@ int main()
 	Floor podloga;
 	podloga_w = &podloga;
 
+	Skybox skybox;
+	sky = &skybox;
+
 	DirLight light123;
 	lightDir = &light123;
 
 	SpotLight light321;
 	lightSpot = &light321;
+
+	PointLight light213;
+	lightPoint = &light213;
 
 
 	for (int i = 0; i < fishNum; i++)
@@ -186,6 +338,15 @@ int main()
 
 	//Other* treasure = new Other("treasure", glm::vec3(1.0f, 1.0f, 1.0f));
 	//table.push_back(treasure);
+	Shader shader("PhongShading.vs", "PhongShading2.fs");
+	Shader skyboxShader("skybox.vs", "skybox.fs");
+	shaderCube = &shader;
+	shaderSkybox = &skyboxShader;
+	
+
+
+
+
 
 	DWORD next_game_tick = GetTickCount64();
 	int sleep_time = 0;
@@ -197,6 +358,16 @@ int main()
 		lastFrame = currentFrame;
 
 		processInput(window);
+
+		int width = 300;
+		int height = 230;
+		//Vector2D center = { width * 0.5,height * 0.8 };
+		//Vector2D up = { 0.0,-50.0 };
+
+		//PythagorasTree(&center,&up,10);
+		//double magn = 100;
+		//glfwGetCursorPos(window, 0, &magn);
+		//PythagorasTreeByLen(&center, &up, 13, (double)magn / (double)128.0, width, height);
 
 		drawScene(window);
 
@@ -261,6 +432,15 @@ int main()
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
+
+
+		// render
+		// ------
+		//glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+		//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+
+
 
 		glfwPollEvents();
 
@@ -342,14 +522,14 @@ void processInput(GLFWwindow* window)
 	if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS)                   //Ambient On
 	{
 		ambientOn = 1.0;
-		//pointLight->turnAmbientOn();
+		lightPoint->turnAmbientOn();
 		lightDir->turnAmbientOn();
 		lightSpot->turnAmbientOn();
 	}
 	if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS)                   //Ambient Off
 	{
 		ambientOn = 0.0;
-		//pointLight.turnAmbientOff();
+		lightPoint->turnAmbientOff();
 		lightSpot->turnAmbientOff();
 		lightDir->turnAmbientOff();
 	}
@@ -357,7 +537,7 @@ void processInput(GLFWwindow* window)
 	if (glfwGetKey(window, GLFW_KEY_3) == GLFW_PRESS)                   //Diffuse On
 	{
 		diffuseOn = 1.0;
-		//pointLight.turnDiffuseOn();
+		lightPoint->turnDiffuseOn();
 		lightSpot->turnDiffuseOn();
 		lightDir->turnDiffuseOn();
 
@@ -365,33 +545,33 @@ void processInput(GLFWwindow* window)
 	if (glfwGetKey(window, GLFW_KEY_4) == GLFW_PRESS)                   //Diffuse Off
 	{
 		diffuseOn = 0.0;
-		//pointLight.turnDiffuseOff();
+		lightPoint->turnDiffuseOff();
 		lightSpot->turnDiffuseOff();
 		lightDir->turnDiffuseOff();
 	}
 	if (glfwGetKey(window, GLFW_KEY_5) == GLFW_PRESS)                   //Specular On
 	{
 		specularOn = 1.0;
-		//pointLight.turnSpecularOn();
+		lightPoint->turnSpecularOn();
 		lightSpot->turnSpecularOn();
 		lightDir->turnSpecularOn();
 	}
 	if (glfwGetKey(window, GLFW_KEY_6) == GLFW_PRESS)                   //Specular Off
 	{
 		specularOn = 0.0;
-		//pointLight.turnSpecularOff();
+		lightPoint->turnSpecularOff();
 		lightSpot->turnSpecularOff();
 		lightDir->turnSpecularOff();
 	}
 	if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS)                   //Point Light On
 	{
 		pointLightOn = 1.0;
-		//pointLight.turnOn();
+		lightPoint->turnOn();
 	}
 	if (glfwGetKey(window, GLFW_KEY_V) == GLFW_PRESS)                   //Point Light Off
 	{
 		pointLightOn = 0.0;
-		//pointLight.turnOff();
+		lightPoint->turnOff();
 	}
 	if (glfwGetKey(window, GLFW_KEY_B) == GLFW_PRESS)                   //Directional Light On
 	{
@@ -418,6 +598,59 @@ void processInput(GLFWwindow* window)
 		dark ^= true;
 		std::cout << dark << std::endl;
 		Sleep(100);
+	}
+
+	if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS)                   //Pitch positive
+	{
+		/*rotateAngle_X += 1;
+		rotateAxis_X = 1.0;
+		rotateAxis_Y = 0.0;
+		rotateAxis_Z = 0.0;*/
+		camera.ProcessYPR(0.0f, 3.0f, 0.0f);
+	}
+	if (glfwGetKey(window, GLFW_KEY_J) == GLFW_PRESS)                   //Pitch negative
+	{
+		/*rotateAngle_X += 1;
+		rotateAxis_X = 1.0;
+		rotateAxis_Y = 0.0;
+		rotateAxis_Z = 0.0;*/
+		camera.ProcessYPR(0.0f, -3.0f, 0.0f);
+	}
+
+	if (glfwGetKey(window, GLFW_KEY_Y) == GLFW_PRESS)                   //Yaw positive
+	{
+		/*rotateAngle_Y += 1;
+		rotateAxis_X = 0.0;
+		rotateAxis_Y = 1.0;
+		rotateAxis_Z = 0.0;*/
+		camera.ProcessYPR(3.0f, 0.0f, 0.0f);
+	}
+	if (glfwGetKey(window, GLFW_KEY_U) == GLFW_PRESS)                   //Yaw negative
+	{
+		/*rotateAngle_Y += 1;
+		rotateAxis_X = 0.0;
+		rotateAxis_Y = 1.0;
+		rotateAxis_Z = 0.0;*/
+		camera.ProcessYPR(-3.0f, 0.0f, 0.0f);
+	}
+
+	if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS)                   //Roll positive
+	{
+		/*rotateAngle_Z += 0.1;
+		rotateAxis_X = 0.0;
+		rotateAxis_Y = 0.0;
+		rotateAxis_Z = 1.0;*/
+		camera.ProcessYPR(0.0f, 0.0f, 0.5f);
+
+	}
+	if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)                   //Roll negative
+	{
+		/*rotateAngle_Z += 0.1;
+		rotateAxis_X = 0.0;
+		rotateAxis_Y = 0.0;
+		rotateAxis_Z = 1.0;*/
+		camera.ProcessYPR(0.0f, 0.0f, -0.5f);
+
 	}
 
 
@@ -481,27 +714,366 @@ void scrollCallback(GLFWwindow* window, double xOffset, double yOffset)
 	camera.ProcessMouseScroll(yOffset);
 }
 
+static void DrawRectangle(Vector2D* center, Vector2D* up, const unsigned long depth)
+{
+	Vector2D normaln = { -up->Y,up->X };
+
+	glColor3f(((1.0f / 10.0f) * (double)depth), 0.3f + ((0.7f / 10.0f) * (double)depth), 0.5f);
+
+	glBegin(GL_QUADS);
+	glVertex2d(center->X - up->X - normaln.X, center->Y - up->Y - normaln.Y);
+	glVertex2d(center->X - up->X + normaln.X, center->Y - up->Y + normaln.Y);
+	glVertex2d(center->X + up->X + normaln.X, center->Y + up->Y + normaln.Y);
+	glVertex2d(center->X + up->X - normaln.X, center->Y + up->Y - normaln.Y);
+	glEnd();
+};
+
+static void PythagorasTreeByLen(Vector2D* center, Vector2D* up, const unsigned long depth, const double magn, const unsigned long screenw, const unsigned long screenh)
+{
+	if (depth == 0 || center == 0 || up == 0) return;
+
+	// Avoid if center are out of screen area
+	if (center->X<0 || center->Y<0 || center->X>screenw || center->Y>screenh) return;
+
+	// Draw incoming rectangle
+	DrawRectangle(center, up, depth);
+
+	// --------------------------------
+	// Calculate one side
+	//
+
+	Vector2D top(center->X + up->X + up->X * magn, center->Y + up->Y + up->Y * magn);
+
+	Vector2D normal(-up->Y, up->X);
+
+	Vector2D left((center->X + up->X + normal.X), (center->Y + up->Y + normal.Y));
+
+	Vector2D cross((top.X - left.X) * 0.5, (top.Y - left.Y) * 0.5);
+
+	Vector2D crossnormal(-cross.Y, cross.X);
+
+	Vector2D newcenter((left.X + cross.X + crossnormal.X), (left.Y + cross.Y + crossnormal.Y));
+
+	PythagorasTreeByLen(&newcenter, &crossnormal, depth - 1, magn, screenw, screenh);
+
+	// --------------------------------
+	// Calculate the other side
+	//
+	Vector2D normal2(up->Y, -up->X);
+	Vector2D left2((center->X + up->X + normal2.X), (center->Y + up->Y + normal2.Y));
+
+	Vector2D cross2((top.X - left2.X) * 0.5, (top.Y - left2.Y) * 0.5);
+
+	Vector2D crossnormal2(cross2.Y, -cross2.X);
+
+	Vector2D newcenter2((left2.X + cross2.X + crossnormal2.X), (left2.Y + cross2.Y + crossnormal2.Y));
+
+	PythagorasTreeByLen(&newcenter2, &crossnormal2, depth - 1, magn, screenw, screenh);
+};
+
+static void PythagorasTree(Vector2D* center, Vector2D* up, const unsigned long depth)
+{
+	// This is static and classical Pythagoras Tree
+
+	if (depth == 0 || center == 0 || up == 0) return;
+	DrawRectangle(center, up, depth);
+
+	unsigned char counter = 0;
+
+	Vector2D normal(-up->Y, up->X);
+
+	for (counter = 0; counter < 2; counter++)
+	{
+		Vector2D newup((up->X + normal.X) * 0.5, (up->Y + normal.Y) * 0.5);
+
+		Vector2D newcenter(center->X + up->X * 2.0 + normal.X, center->Y + up->Y * 2.0 + normal.Y);
+
+		PythagorasTree(&newcenter, &newup, depth - 1);
+
+		Vector2D normal(up->Y, -up->X);
+	};
+};
 
 
+
+
+unsigned int drawControlPoints()
+{
+	unsigned int controlPointVAO;
+	unsigned int controlPointVBO;
+
+	glGenVertexArrays(1, &controlPointVAO);
+	glGenBuffers(1, &controlPointVBO);
+
+	glBindVertexArray(controlPointVAO);
+
+	glBindBuffer(GL_ARRAY_BUFFER, controlPointVBO);
+	glBufferData(GL_ARRAY_BUFFER, (unsigned int)cntrlPoints.size() * sizeof(float), cntrlPoints.data(), GL_STATIC_DRAW);
+
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+
+	return controlPointVAO;
+}
+
+
+
+
+long long nCr(int n, int r)
+{
+	if (r > n / 2)
+		r = n - r; // because C(n, r) == C(n, n - r)
+	long long ans = 1;
+	int i;
+
+	for (i = 1; i <= r; i++)
+	{
+		ans *= n - r + i;
+		ans /= i;
+	}
+
+	return ans;
+}
+
+//polynomial interpretation for N points
+void BezierCurve(double t, float xy[2], GLfloat ctrlpoints[], int L)
+{
+	double y = 0;
+	double x = 0;
+	t = t > 1.0 ? 1.0 : t;
+	for (int i = 0; i < L + 1; i++)
+	{
+		long long ncr = nCr(L, i);
+		double oneMinusTpow = pow(1 - t, double(L - i));
+		double tPow = pow(t, double(i));
+		double coef = oneMinusTpow * tPow * ncr;
+		x += coef * ctrlpoints[i * 3];
+		y += coef * ctrlpoints[(i * 3) + 1];
+
+	}
+	xy[0] = float(x);
+	xy[1] = float(y);
+}
+
+unsigned int hollowBezier(GLfloat ctrlpoints[], int L)
+{
+	int i, j;
+	float x, y, z, r;                //current coordinates
+	float theta;
+	float nx, ny, nz, lengthInv;    // vertex normal
+
+
+	const float dtheta = 2 * pi / ntheta;        //angular step size
+
+	float t = 0;
+	float dt = 1.0 / nt;
+	float xy[2];
+
+	for (i = 0; i <= nt; ++i)              //step through y
+	{
+		BezierCurve(t, xy, ctrlpoints, L);
+		r = xy[0];
+		y = xy[1];
+		theta = 0;
+		t += dt;
+		lengthInv = 1.0 / r;
+
+		for (j = 0; j <= ntheta; ++j)
+		{
+			double cosa = cos(theta);
+			double sina = sin(theta);
+			z = r * cosa;
+			x = r * sina;
+
+			coordinates.push_back(x);
+			coordinates.push_back(y);
+			coordinates.push_back(z);
+
+			// normalized vertex normal (nx, ny, nz)
+			// center point of the circle (0,y,0)
+			nx = (x - 0) * lengthInv;
+			ny = (y - y) * lengthInv;
+			nz = (z - 0) * lengthInv;
+
+			normals.push_back(nx);
+			normals.push_back(ny);
+			normals.push_back(nz);
+
+			theta += dtheta;
+		}
+	}
+
+	// generate index list of triangles
+	// k1--k1+1
+	// |  / |
+	// | /  |
+	// k2--k2+1
+
+	int k1, k2;
+	for (int i = 0; i < nt; ++i)
+	{
+		k1 = i * (ntheta + 1);     // beginning of current stack
+		k2 = k1 + ntheta + 1;      // beginning of next stack
+
+		for (int j = 0; j < ntheta; ++j, ++k1, ++k2)
+		{
+			// k1 => k2 => k1+1
+			indices.push_back(k1);
+			indices.push_back(k2);
+			indices.push_back(k1 + 1);
+
+			// k1+1 => k2 => k2+1
+			indices.push_back(k1 + 1);
+			indices.push_back(k2);
+			indices.push_back(k2 + 1);
+		}
+	}
+
+	size_t count = coordinates.size();
+	for (int i = 0; i < count; i += 3)
+	{
+		vertices.push_back(coordinates[i]);
+		vertices.push_back(coordinates[i + 1]);
+		vertices.push_back(coordinates[i + 2]);
+
+		vertices.push_back(normals[i]);
+		vertices.push_back(normals[i + 1]);
+		vertices.push_back(normals[i + 2]);
+	}
+
+	unsigned int bezierVAO;
+	glGenVertexArrays(1, &bezierVAO);
+	glBindVertexArray(bezierVAO);
+
+	// create VBO to copy vertex data to VBO
+	unsigned int bezierVBO;
+	glGenBuffers(1, &bezierVBO);
+	glBindBuffer(GL_ARRAY_BUFFER, bezierVBO);           // for vertex data
+	glBufferData(GL_ARRAY_BUFFER,                   // target
+		(unsigned int)vertices.size() * sizeof(float), // data size, # of bytes
+		vertices.data(),   // ptr to vertex data
+		GL_STATIC_DRAW);                   // usage
+
+	// create EBO to copy index data
+	unsigned int bezierEBO;
+	glGenBuffers(1, &bezierEBO);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bezierEBO);   // for index data
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER,           // target
+		(unsigned int)indices.size() * sizeof(unsigned int),             // data size, # of bytes
+		indices.data(),               // ptr to index data
+		GL_STATIC_DRAW);                   // usage
+
+	// activate attrib arrays
+	glEnableVertexAttribArray(0);
+	glEnableVertexAttribArray(1);
+
+	// set attrib arrays with stride and offset
+	int stride = 24;     // should be 24 bytes
+	glVertexAttribPointer(0, 3, GL_FLOAT, false, stride, (void*)0);
+	glVertexAttribPointer(1, 3, GL_FLOAT, false, stride, (void*)(sizeof(float) * 3));
+
+	// unbind VAO, VBO and EBO
+	glBindVertexArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+	return bezierVAO;
+}
 
 
 // glfw: whenever the mouse scroll wheel scrolls, this callback is called
 // ----------------------------------------------------------------------
-void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
-{
-	if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
-	{
-		camera.EnableCamera = true;
-		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-	}
-	else
-	{
-		camera.EnableCamera = false;
-		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-	}
-}
+//void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
+//{
+//	if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
+//	{
+//		camera.EnableCamera = true;
+//		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+//	}
+//	else
+//	{
+//		camera.EnableCamera = false;
+//		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+//	}
+//}
 
-
+//// utility function for loading a 2D texture from file
+//// ---------------------------------------------------
+//unsigned int loadTexture(char const* path)
+//{
+//	unsigned int textureID;
+//	glGenTextures(1, &textureID);
+//
+//	int width, height, nrComponents;
+//	unsigned char* data = stbi_load(path, &width, &height, &nrComponents, 0);
+//	if (data)
+//	{
+//		GLenum format;
+//		if (nrComponents == 1)
+//			format = GL_RED;
+//		else if (nrComponents == 3)
+//			format = GL_RGB;
+//		else if (nrComponents == 4)
+//			format = GL_RGBA;
+//
+//		glBindTexture(GL_TEXTURE_2D, textureID);
+//		glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+//		glGenerateMipmap(GL_TEXTURE_2D);
+//
+//		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+//		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+//		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+//		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+//
+//		stbi_image_free(data);
+//	}
+//	else
+//	{
+//		std::cout << "Texture failed to load at path: " << path << std::endl;
+//		stbi_image_free(data);
+//	}
+//
+//	return textureID;
+//}
+//
+//// loads a cubemap texture from 6 individual texture faces
+//// order:
+//// +X (right)
+//// -X (left)
+//// +Y (top)
+//// -Y (bottom)
+//// +Z (front) 
+//// -Z (back)
+//// -------------------------------------------------------
+//unsigned int loadCubemap(std::vector<std::string> faces)
+//{
+//	unsigned int textureID;
+//	glGenTextures(1, &textureID);
+//	glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
+//
+//	int width, height, nrComponents;
+//	for (unsigned int i = 0; i < faces.size(); i++)
+//	{
+//		unsigned char* data = stbi_load(faces[i].c_str(), &width, &height, &nrComponents, 0);
+//		if (data)
+//		{
+//			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+//			stbi_image_free(data);
+//		}
+//		else
+//		{
+//			std::cout << "Cubemap texture failed to load at path: " << faces[i] << std::endl;
+//			stbi_image_free(data);
+//		}
+//	}
+//	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+//	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+//	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+//	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+//	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+//
+//	return textureID;
+//}
 
 
 

@@ -12,9 +12,9 @@
 extern std::mt19937 gen;
 
 //Maximum area where "renderables" may move
-const float MAX_X = 15.0f;
+const float MAX_X = 12.0f;
 const float MAX_Y = 7.5f;
-const float MAX_Z = 15.0f;
+const float MAX_Z = 12.0f;
 const float MIN_Y = 2.5f;
 
 
@@ -82,12 +82,19 @@ public:
 	void move(glm::vec3 coordinates);
 };
 
-class Plant : public Renderable
-{
-private:
-	float location[3];
-
-};
+//class Plant : public Renderable
+//{
+//private:
+//	const int maxDepth = 8; // Maximum depth of the tree
+//	const float angle = 25.0; // Angle of branching
+//	float length; int depth;
+//public:
+//	Plant();
+//	void draw(Shader* sp);
+//	void behave();
+//	void drawBranch(float length, float angle, int depth);
+//
+//};
 
 class Other : public Renderable
 {
@@ -112,11 +119,6 @@ public:
 	void draw(Shader* sp);
 	void behave();
 };
-
-
-
-
-
 
 
 #endif
